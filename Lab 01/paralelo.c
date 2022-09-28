@@ -34,7 +34,7 @@ void imprime(int **array, int num_arrays, int size)
 
 void bubble(void *arg)
 {
-    // *arg é o struct criado
+    // *arg é parametro que contém o struct criado anteriormente
     dados_bubble *db;
     // é feito o cast de arg para dados_bubble para pegar as informações de cada campo do struct
     db = (dados_bubble *)arg;
