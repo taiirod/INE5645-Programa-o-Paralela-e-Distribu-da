@@ -1,6 +1,6 @@
 // Compilar:
-// clear && gcc -pthread paralelo.c -o paralelo 
-// && 
+// clear && gcc -pthread paralelo.c -o paralelo
+// &&
 // ./paralelo 3 3
 
 #include <stdio.h>
@@ -12,6 +12,7 @@
 
 #define IMPRIME
 
+// Criação de struct para poder passar mais de um parametro para a função bubble
 typedef struct dados_t
 {
     int *elementos;
@@ -33,7 +34,9 @@ void imprime(int **array, int num_arrays, int size)
 
 void bubble(void *arg)
 {
+    // *arg é o struct criado
     dados_bubble *db;
+    // é feito o cast de arg para dados_bubble para pegar as informações de cada campo do struct
     db = (dados_bubble *)arg;
     int i, j;
     int tam = db->tam;
@@ -77,8 +80,6 @@ int main(int argc, char **argv)
     for (i = 0; i < num_array; i++)
         elementos[i] = (int *)malloc(tam_array * sizeof(int));
 
-    
-
     /*Popula os arrays com elementos aleatorios entre 0 e 1000*/
     for (i = 0; i < num_array; i++)
         for (j = 0; j < tam_array; j++)
@@ -93,8 +94,10 @@ int main(int argc, char **argv)
     gettimeofday(&t1, NULL);
     for (i = 0; i < num_threads; i++)
     {
+        // instanciação e alocação de memoria do struct dados_bubble
         dados_bubble *dados;
         dados = malloc(sizeof(dados_bubble));
+        // atribuição de informações para os atributos do struct
         dados->tam = tam_array;
         dados->elementos = elementos[i];
         pthread_create(&t[0], NULL, bubble, (void *)dados);
