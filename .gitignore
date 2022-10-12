@@ -8,3 +8,7 @@ Lab 01/paralelo
 *.class
 
 Lab 03/.vscode/
+
+Lab 03/contadorParalelo
+
+Lab 03/contadorSequencial
