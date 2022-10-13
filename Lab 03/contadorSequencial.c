@@ -16,18 +16,22 @@ void printarTempoDeExecucao()
     double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
     printf("\n");
     printf("----------------------------------------------------------\n");
-    printf("Tempo total de execução = %f\n", t_total);
+    printf("Tempo total de execução [Sequencial] = %f\n", t_total);
     printf("----------------------------------------------------------\n");
 }
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
 
+    for (int i = 0; palavra[i]; i++)
+    {
+        palavra[i] = tolower(palavra[i]);
+    }
     char *p = strstr(linha, palavra);
     if ((p == linha) || (p != NULL && !isalnum((unsigned char)p[-1])))
     {
         p += strlen(palavra);
-        if (!isalnum((unsigned char)*p))
+        if (tolower(!isalnum((unsigned char)*p)))
         {
             ocorrencias_palavra_chave[contador]++;
         }
@@ -45,14 +49,14 @@ int main(int argc, char *argv[])
 
     *ocorrencias_palavra_chave = malloc(argc * sizeof(int));
 
-    fp = fopen("lotr.txt", "r");
+    fp = fopen("arquivo.txt", "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
     if (argc < 3)
     {
         printf("Digite %s palavras[]\n", argv[0]);
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 
     while ((read = getline(&line, &len, fp)) != -1)
