@@ -22,16 +22,29 @@ void printarTempoDeExecucao()
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
-
     for (int i = 0; palavra[i]; i++)
     {
         palavra[i] = tolower(palavra[i]);
     }
-    char *p = strstr(linha, palavra);
-    if ((p == linha) || (p != NULL && !isalnum((unsigned char)p[-1])))
+    for (int i = 0; linha[i]; i++)
     {
-        p += strlen(palavra);
-        if (tolower(!isalnum((unsigned char)*p)))
+        linha[i] = tolower(linha[i]);
+    }
+
+    int cont = 0;
+    int i;
+    int j = 0;
+    for (i = 0; i < strlen(linha); i++)
+    {
+        if (linha[i] == palavra[j])
+        {
+            j++;
+        }
+        else
+        {
+            j = 0;
+        }
+        if (j == strlen(palavra))
         {
             ocorrencias_palavra_chave[contador]++;
         }
@@ -53,7 +66,7 @@ int main(int argc, char *argv[])
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
-    if (argc < 3)
+    if (argc < 1)
     {
         printf("Digite %s palavras[]\n", argv[0]);
         exit(EXIT_FAILURE);

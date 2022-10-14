@@ -23,16 +23,29 @@ void printarTempoDeExecucao()
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
-
     for (int i = 0; palavra[i]; i++)
     {
         palavra[i] = tolower(palavra[i]);
     }
-    char *p = strstr(linha, palavra);
-    if ((p == linha) || (p != NULL && !isalnum((unsigned char)p[-1])))
+    for (int i = 0; linha[i]; i++)
     {
-        p += strlen(palavra);
-        if (tolower(!isalnum((unsigned char)*p)))
+        linha[i] = tolower(linha[i]);
+    }
+
+    int cont = 0;
+    int i;
+    int j = 0;
+    for (i = 0; i < strlen(linha); i++)
+    {
+        if (linha[i] == palavra[j])
+        {
+            j++;
+        }
+        else
+        {
+            j = 0;
+        }
+        if (j == strlen(palavra))
         {
             ocorrencias_palavra_chave[contador]++;
         }
@@ -48,6 +61,8 @@ int main(int argc, char *argv[])
     size_t len = 0;
     ssize_t read;
 
+    omp_set_num_threads(atoi(argv[1]));
+
     *ocorrencias_palavra_chave = malloc(argc * sizeof(int));
 
     fp = fopen("arquivo.txt", "r");
@@ -59,21 +74,17 @@ int main(int argc, char *argv[])
         printf("Digite %s numeroThreads palavras[]\n", argv[0]);
         exit(0);
     }
-    omp_set_num_threads(atoi(argv[1]));
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        printf("line %d:\n", &line);
-        printf("len %d:\n", &len);
-        printf("fp %s:\n", fp);
-#pragma omp for
+        #pragma omp parallel for
         for (int i = 2; i < argc; i++)
         {
             numOcorrencias(line, argv[i], i);
         }
     }
 
-#pragma omp for
+    #pragma omp parallel for
     for (int i = 2; i < argc; i++)
     {
         printf("Palavra: %s, foi encontrada: %i vezes\n", argv[i], ocorrencias_palavra_chave[i]);
