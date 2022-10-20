@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define NUM_THREADS 2
 #define IMPRIME
 
 // Criação de struct para poder passar mais de um parametro para a função bubble
@@ -72,8 +73,7 @@ int main(int argc, char **argv)
     tam_array = atoi(argv[2]);
     // srand(time(NULL));
 
-    num_threads = num_array;
-    pthread_t t[num_threads];
+    pthread_t t[NUM_THREADS];
 
     /*Aloca memória para os vetores*/
     elementos = (int **)malloc(num_array * sizeof(int *));
@@ -92,17 +92,22 @@ int main(int argc, char **argv)
 #endif
 
     gettimeofday(&t1, NULL);
-    for (i = 0; i < num_threads; i++)
+    for (i = 0; i < NUM_THREADS; i++)
     {
+        for (i = 0; i < num_array/2; i++)
+        {
+            dados_bubble *dados;
+            dados = malloc(sizeof(dados_bubble));
+            // atribuição de informações para os atributos do struct
+            dados->tam = tam_array;
+            dados->elementos = elementos[i];
+            pthread_create(&t[0], NULL, bubble, (void *)dados);
+            /* code */
+        }
+
         // instanciação e alocação de memoria do struct dados_bubble
-        dados_bubble *dados;
-        dados = malloc(sizeof(dados_bubble));
-        // atribuição de informações para os atributos do struct
-        dados->tam = tam_array;
-        dados->elementos = elementos[i];
-        pthread_create(&t[0], NULL, bubble, (void *)dados);
     }
-    for (i = 0; i < num_threads; i++)
+    for (i = 0; i < NUM_THREADS; i++)
     {
         pthread_join(t[i], NULL);
     }

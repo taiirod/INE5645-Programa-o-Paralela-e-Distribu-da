@@ -1,5 +1,7 @@
 // gcc-12 -fopenmp contadorParalelo.c -o contadorParalelo
-// ./contadorParalelo 4 All And Boy Book Call Car Chair Children City Dog  Door Enemy  End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+// Metade 13 palavras ./contadorParalelo 2 All And Boy Book Call Car Chair Children City Dog Door Enemy End 
+// Original 25 palavras ./contadorParalelo 2 All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+// Dobro  50 palavras ./contadorParalelo 2 All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
 #define _GNU_SOURC
 #include <stdio.h>

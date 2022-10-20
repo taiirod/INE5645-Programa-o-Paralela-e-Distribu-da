@@ -1,5 +1,7 @@
 // gcc-12 contadorSequencial.c -o contadorSequencial
-// ./contadorSequencial All And Boy Book Call Car Chair Children City Dog  Door Enemy  End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+// Metade 13 palavras ./contadorSequencial All And Boy Book Call Car Chair Children City Dog  Door Enemy  End 
+// Original 25 palavras ./contadorSequencial All And Boy Book Call Car Chair Children City Dog  Door Enemy  End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+// Dobro  50 palavras ./contadorSequencial All And Boy Book Call Car Chair Children City Dog  Door Enemy  End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
 #define _GNU_SOURC
 #include <stdio.h>
@@ -62,7 +64,7 @@ int main(int argc, char *argv[])
 
     *ocorrencias_palavra_chave = malloc(argc * sizeof(int));
 
-    fp = fopen("arquivo.txt", "r");
+    fp = fopen("/Users/taiirod/Documents/Facul/Paralela/Lab 03/arquivo.txt", "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 
