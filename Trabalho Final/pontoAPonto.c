@@ -1,10 +1,10 @@
 // mpicc pontoAPonto.c -o pontoAPonto
 // Metade 13 palavras
-//      mpiexec -np 2 ./pontoAPonto . All And Boy Book Call Car Chair Children City Dog Door Enemy End
+//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End
 // Original 25 palavras
-//      mpiexec -np 2 ./pontoAPonto . All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 // Dobro 50 palavras
-//      mpiexec -np 2 ./pontoAPonto . All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +15,7 @@
 struct timeval t1, t2;
 int palavrasPorProcesso;
 int numeroRecebido;
+int numeroLimite;
 int ocorrencias_palavra_chave[0];
 int processo[10];
 
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         printf("Digite %s palavras[]\n", argv[0]);
-        exit(EXIT_FAILURE);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     if (world_rank == 0)
@@ -76,10 +77,10 @@ int main(int argc, char *argv[])
         int numeroParaMandar = 1;
         for (int i = 1; i < world_size; i++)
         {
-            printf("numeroParaMandar: %d\n", numeroParaMandar);
             MPI_Send(&numeroParaMandar, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-
             numeroParaMandar = numeroParaMandar + palavrasPorProcesso;
+            numeroLimite = numeroParaMandar - 1;
+            MPI_Send(&numeroLimite, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
         }
     }
     else
@@ -95,24 +96,18 @@ int main(int argc, char *argv[])
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         MPI_Recv(&numeroRecebido, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf("VALOR RECEBIDO NA MENSAGEM: %d \n", numeroRecebido);
-
-        for (int i = numeroRecebido; i < argc; i++)
-        {
-            printf("ITERANDO O I DO ELSE: %d \n", i);
-        }
+        MPI_Recv(&numeroLimite, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         while ((read = getline(&line, &len, fp)) != -1)
         {
-            for (int i = numeroRecebido; i < argc; i++)
+            for (int i = numeroRecebido; i < numeroLimite + 1; i++)
             {
-                // printf("ITERANDO O I DO ELSE: %d \n", i);
                 numOcorrencias(line, argv[i], i);
             }
         }
-        for (int i = numeroRecebido; i < argc; i++)
+        for (int i = numeroRecebido; i < numeroLimite + 1; i++)
         {
-            // printf("Palavra: %s, foi encontrada: %i vezes\n", argv[i], ocorrencias_palavra_chave[i]);
+            printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
         }
         fclose(fp);
     }
