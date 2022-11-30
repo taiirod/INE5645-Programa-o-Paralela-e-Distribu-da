@@ -12,13 +12,14 @@
 #include <mpi.h>
 #include <ctype.h>
 
+#define TAMANHO_MAXIMO 100
+
 struct timeval t1, t2;
 int palavrasPorProcesso;
 int numeroRecebido;
 int numeroLimite;
 int numeroParaMandar = 1;
-char palavras[100][20];
-char palavrasRecebidas[100][20];
+int numerosRecebidos[TAMANHO_MAXIMO];
 int ocorrencias_palavra_chave[0];
 
 int numOcorrencias(char *linha, char *palavra, int contador)
@@ -85,26 +86,34 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    *palavrasRecebidas = malloc(argc * sizeof(int));
+    int numeros[TAMANHO_MAXIMO];
 
-    MPI_Scatter(argv, palavrasPorProcesso, MPI_BYTE, palavrasRecebidas, palavrasPorProcesso, MPI_BYTE, 0, MPI_COMM_WORLD);
-    printf("[PROCESSO: %i] RECEBIDO %s\n", world_rank, palavrasRecebidas[0]);
-    
-    
+    for (int i = 1; i < argc; i++)
+    {
+        numeros[i] = i;
+    }
+
+    MPI_Scatter(numeros, palavrasPorProcesso, MPI_INT, numerosRecebidos, palavrasPorProcesso, MPI_INT, 0, MPI_COMM_WORLD);
+
+    printf("[PROCESSO: %i] começa em %i\n", world_rank, numerosRecebidos[0]);
+    for (int i = numerosRecebidos[0]; i < numerosRecebidos[palavrasPorProcesso - 1]; i++)
+    {
+        printf("[PROCESSO: %i] começa em %i e vai até %i\n", world_rank, i, numerosRecebidos[palavrasPorProcesso - 1]);
+    }
+
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        for (int i = 1; i < argc + 1; i++)
+        for (int i = numerosRecebidos[0]; i < numerosRecebidos[palavrasPorProcesso - 1]; i++)
         {
             numOcorrencias(line, argv[i], i);
         }
     }
-    for (int i = 1; i < argc + 1; i++)
+    for (int i = numerosRecebidos[0]; i < numerosRecebidos[palavrasPorProcesso - 1]; i++)
     {
         printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
     }
     fclose(fp);
 
-    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     return 0;
 }
