@@ -19,7 +19,7 @@ struct timeval t1, t2;
 int palavrasPorProcesso;
 int numerosRecebidos[TAMANHO_MAXIMO];
 int ocorrencias_palavra_chave[0];
-
+const int MASTER = 0;
 
 void printarTempoDeExecucao()
 {
@@ -90,13 +90,17 @@ int main(int argc, char *argv[])
         printf("Não conseguiu abrir o arquivo %s\n", fp);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-    
-    palavrasPorProcesso = (argc-1) / world_size;
-    int numeros[TAMANHO_MAXIMO];
 
-    for (int i = 0; i < argc - 1; i++)
+    palavrasPorProcesso = (argc - 1) / world_size;
+    int numeros[TAMANHO_MAXIMO];
+    if (world_rank == MASTER)
     {
-        numeros[i] = i + 1;
+        for (int i = 0; i < argc - 1; i++)
+        {
+            numeros[i] = i + 1;
+    printf("[PROCESSO: %i] - Alocando numero: %d \n", world_rank, numeros[i]);
+
+        }
     }
 
     MPI_Scatter(numeros, palavrasPorProcesso, MPI_INT, numerosRecebidos, palavrasPorProcesso, MPI_INT, 0, MPI_COMM_WORLD);
@@ -116,6 +120,8 @@ int main(int argc, char *argv[])
         printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes na posicao %i\n", world_rank, argv[i], ocorrencias_palavra_chave[i], i);
     }
     fclose(fp);
+
     
     MPI_Finalize();
+    return 0;
 }

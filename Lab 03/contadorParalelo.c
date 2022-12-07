@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     #pragma omp parallel for
     for (int i = 2; i < argc; i++)
     {
-        printf("Palavra: %s, foi encontrada: %i vezes\n", argv[i], ocorrencias_palavra_chave[i]);
+        printf("Palavra: %s, foi encontrada: %i vezes na posicao %i\n", argv[i], ocorrencias_palavra_chave[i], i);
     }
 
     gettimeofday(&t2, NULL);
