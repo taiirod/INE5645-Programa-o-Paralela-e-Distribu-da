@@ -1,36 +1,24 @@
-// mpicc socket.c -o socket
-// Metade 13 palavras
-//      mpiexec -np 2 ./socket All And Boy Book Call Car Chair Children City Dog Door Enemy End
-// Original 25 palavras
-//      mpiexec -np 2 ./socket All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
-// Dobro 50 palavras
-//      mpiexec -np 2 ./socket All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+// clear && gcc-12 servidor.c -o servidor && ./servidor
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <ctype.h>
-
-int main(int argc, char *argv[])
+#include <stdio.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <stdlib.h>
+int main()
 {
-
     int server_sockfd, client_sockfd;
     int server_len, client_len;
     struct sockaddr_in server_address;
     struct sockaddr_in client_address;
     char ch;
 
-    if (argc < 2)
-    {
-        printf("Digite %s palavras[]\n", argv[0]);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     server_address.sin_family = AF_INET;
-
+    // server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // server_address.sin_addr.s_addr = inet_addr("192.168.0.15");
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
     server_address.sin_port = htons(9734);
     server_len = sizeof(server_address);
@@ -42,11 +30,9 @@ int main(int argc, char *argv[])
         client_len = sizeof(client_address);
         client_sockfd = accept(server_sockfd, (struct sockaddr *)&client_address, &client_len);
         read(client_sockfd, &ch, 1);
+        printf("char from client = %i\n", ch);
         ch++;
         write(client_sockfd, &ch, 1);
         close(client_sockfd);
     }
-
-    
-    exit(1);
 }

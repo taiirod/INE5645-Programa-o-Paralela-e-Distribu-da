@@ -1,10 +1,10 @@
-// mpicc pontoAPonto.c -o pontoAPonto
+// mpicc coletiva.c -o coletiva
 // Metade 13 palavras
-//      mpiexec -np 2 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End
+//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End
 // Original 25 palavras
-//      mpiexec -np 2 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 // Dobro 50 palavras
-//      mpiexec -np 2 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +32,7 @@ void printarTempoDeExecucao()
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
+
     for (int i = 0; palavra[i]; i++)
     {
         palavra[i] = tolower(palavra[i]);
@@ -84,6 +85,7 @@ int main(int argc, char *argv[])
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+
     fp = fopen("arquivo.txt", "r");
     if (fp == NULL)
     {
@@ -93,35 +95,32 @@ int main(int argc, char *argv[])
 
     palavrasPorProcesso = (argc - 1) / world_size;
     int numeros[TAMANHO_MAXIMO];
-    if (world_rank == MASTER)
+    for (int i = 0; i < argc - 1; i++)
     {
-        for (int i = 0; i < argc - 1; i++)
-        {
-            numeros[i] = i + 1;
-    printf("[PROCESSO: %i] - Alocando numero: %d \n", world_rank, numeros[i]);
-
-        }
+        numeros[i] = i + 1;
     }
 
     MPI_Scatter(numeros, palavrasPorProcesso, MPI_INT, numerosRecebidos, palavrasPorProcesso, MPI_INT, 0, MPI_COMM_WORLD);
 
-    printf("[PROCESSO: %i] - inicio do array: %d | final do array: %d \n", world_rank, numerosRecebidos[0], numerosRecebidos[palavrasPorProcesso - 1]);
+    printf("[PROCESSO: %d] - inicio do array: %d | final do array: %d \n", world_rank, numerosRecebidos[0], numerosRecebidos[palavrasPorProcesso - 1]);
+
+    int numeroLimite = numerosRecebidos[palavrasPorProcesso - 1];
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
-        for (int i = numerosRecebidos[0]; i <= numerosRecebidos[palavrasPorProcesso - 1]; i++)
+        for (int i = numerosRecebidos[0]; i <= numeroLimite; i++)
         {
             numOcorrencias(line, argv[i], i);
         }
     }
 
-    for (int i = numerosRecebidos[0]; i <= numerosRecebidos[palavrasPorProcesso - 1]; i++)
+    for (int i = numerosRecebidos[0]; i <= numeroLimite; i++)
     {
-        printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes na posicao %i\n", world_rank, argv[i], ocorrencias_palavra_chave[i], i);
+        printf("[PROCESSO: %d] Palavra: %s, foi encontrada: %d vezes na posicao %d\n", world_rank, argv[i], ocorrencias_palavra_chave[i], i);
     }
+
     fclose(fp);
 
-    
     MPI_Finalize();
     return 0;
 }
