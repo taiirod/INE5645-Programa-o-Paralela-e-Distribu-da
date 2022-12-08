@@ -26,7 +26,7 @@ double calculaExecTotal(double *array, int num_elements)
     {
         sum += array[i];
     }
-    return sum / num_elements;
+    return sum / (num_elements-1);
 }
 
 int numOcorrencias(char *linha, char *palavra, int contador)
@@ -123,28 +123,29 @@ int main(int argc, char *argv[])
         }
         gettimeofday(&t2, NULL);
 
-        double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
-
-        double *totais = NULL;
-        if (world_rank == 0)
-        {
-            totais = (double *)malloc(sizeof(double) * world_size);
-            assert(totais != NULL);
-        }
-
-        MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-        if (world_rank == 0)
-        {
-            double execTotal = calculaExecTotal(totais, world_size);
-
-            printf("\n");
-            printf("----------------------------------------------------------\n");
-            printf("[PROCESSO: %d] Tempo total de execução [PONTO A PONTO] = %f\n", world_rank, execTotal);
-            printf("----------------------------------------------------------\n");
-        }
-
         fclose(fp);
+    }
+    double t_total;
+
+    if (world_rank != 0)
+    {
+        t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
+    }
+
+    double *totais = NULL;
+    totais = (double *)malloc(sizeof(double) * world_size);
+    assert(totais != NULL);
+
+    MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if (world_rank == 0)
+    {
+        double execTotal = calculaExecTotal(totais, world_size);
+
+        printf("\n");
+        printf("----------------------------------------------------------\n");
+        printf("[PROCESSO: %d] Tempo total de execução [PONTO A PONTO] = %f\n", world_rank, execTotal);
+        printf("----------------------------------------------------------\n");
     }
 
     MPI_Finalize();
