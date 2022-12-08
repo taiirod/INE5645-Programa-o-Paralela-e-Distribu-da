@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     *ocorrencias_palavra_chave = malloc(argc * sizeof(int));
 
-    fp = fopen("/Users/taiirod/Documents/Facul/Paralela/Lab 03/arquivo.txt", "r");
+    fp = fopen("arquivo.txt", "r");
     if (fp == NULL)
         exit(EXIT_FAILURE);
 

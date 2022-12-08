@@ -10,11 +10,22 @@
 
 int main()
 {
+
+    int clients[] = {9734, 9735, 9736};
+    int qtd_clients = sizeof(clients) / sizeof(clients[0]);
+
     int sockfd;
     int len;
     struct sockaddr_in address;
     int result;
     int ch = 1;
+
+    for (int i = 0; i < qtd_clients; i++)
+    {
+        printf("Digite a porta desse servidor: ");
+        scanf("%d", &server_port);
+    }
+    
 
     for (int i = 0; i <= 7; i++)
     {
@@ -22,23 +33,21 @@ int main()
 
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = inet_addr("127.0.0.1");
-        // address.sin_addr.s_addr = inet_addr("192.168.0.15");
         address.sin_port = htons(9734);
 
         len = sizeof(address);
 
         result = connect(sockfd, (struct sockaddr *)&address, len);
-    
 
-    if (result == -1)
-    {
-        perror("oops: client1");
-        exit(1);
-    }
-    write(sockfd, &ch, 1);
-    read(sockfd, &ch, 1);
-    printf("char from server = %i\n", ch);
-    close(sockfd);
+        if (result == -1)
+        {
+            perror("oops: client1");
+            exit(1);
+        }
+        write(sockfd, &ch, 1);
+        read(sockfd, &ch, 1);
+        printf("char from server = %i\n", ch);
+        close(sockfd);
     }
     exit(0);
 }

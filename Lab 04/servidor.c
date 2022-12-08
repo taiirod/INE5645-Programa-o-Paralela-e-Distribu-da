@@ -9,18 +9,24 @@
 #include <stdlib.h>
 int main()
 {
-    int server_sockfd, client_sockfd;
-    int server_len, client_len;
-    struct sockaddr_in server_address;
-    struct sockaddr_in client_address;
-    char ch;
 
+    int clients[] = {9734, 9735, 9736};
+    int qtd_clients = sizeof(clients) / sizeof(clients[0]);
+
+    int sockfd[qtd_servers];
+    int len[qtd_servers];
+    struct sockaddr_in address[qtd_servers];
+    int result[qtd_servers];
+
+    int ch;
+
+    // Configurando conexão Socket
     server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     server_address.sin_family = AF_INET;
-    // server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-    // server_address.sin_addr.s_addr = inet_addr("192.168.0.15");
     server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(9734);
+    server_address.sin_port = htons(server_port);
+
+    // Bind na conexão
     server_len = sizeof(server_address);
     bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
     listen(server_sockfd, 5);

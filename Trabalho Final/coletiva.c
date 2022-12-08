@@ -1,11 +1,10 @@
 // mpicc coletiva.c -o coletiva
-// Metade 13 palavras
-//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End
 // Original 25 palavras
 //      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 // Dobro 50 palavras
 //      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,19 +14,20 @@
 
 #define TAMANHO_MAXIMO 100
 
-struct timeval t1, t2;
 int palavrasPorProcesso;
 int numerosRecebidos[TAMANHO_MAXIMO];
 int ocorrencias_palavra_chave[0];
 const int MASTER = 0;
 
-void printarTempoDeExecucao()
+double calculaExecTotal(double *array, int num_elements)
 {
-    double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
-    printf("\n");
-    printf("----------------------------------------------------------\n");
-    printf("Tempo total de execução [COLETIVA] = %f\n", t_total);
-    printf("----------------------------------------------------------\n");
+    double sum = 0;
+    int i;
+    for (i = 0; i < num_elements; i++)
+    {
+        sum += array[i];
+    }
+    return sum / num_elements;
 }
 
 int numOcorrencias(char *linha, char *palavra, int contador)
@@ -64,6 +64,8 @@ int numOcorrencias(char *linha, char *palavra, int contador)
 
 int main(int argc, char *argv[])
 {
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
     MPI_Init(NULL, NULL);
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -102,8 +104,6 @@ int main(int argc, char *argv[])
 
     MPI_Scatter(numeros, palavrasPorProcesso, MPI_INT, numerosRecebidos, palavrasPorProcesso, MPI_INT, 0, MPI_COMM_WORLD);
 
-    printf("[PROCESSO: %d] - inicio do array: %d | final do array: %d \n", world_rank, numerosRecebidos[0], numerosRecebidos[palavrasPorProcesso - 1]);
-
     int numeroLimite = numerosRecebidos[palavrasPorProcesso - 1];
 
     while ((read = getline(&line, &len, fp)) != -1)
@@ -117,6 +117,28 @@ int main(int argc, char *argv[])
     for (int i = numerosRecebidos[0]; i <= numeroLimite; i++)
     {
         printf("[PROCESSO: %d] Palavra: %s, foi encontrada: %d vezes na posicao %d\n", world_rank, argv[i], ocorrencias_palavra_chave[i], i);
+    }
+    gettimeofday(&t2, NULL);
+
+    double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
+
+    double *totais = NULL;
+    if (world_rank == 0)
+    {
+        totais = (double *)malloc(sizeof(double) * world_size);
+        assert(totais != NULL);
+    }
+
+    MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if (world_rank == 0)
+    {
+        double execTotal = calculaExecTotal(totais, world_size);
+
+        printf("\n");
+        printf("----------------------------------------------------------\n");
+        printf("[PROCESSO: %d] Tempo total de execução [COLETIVA] = %f\n", world_rank, execTotal);
+        printf("----------------------------------------------------------\n");
     }
 
     fclose(fp);

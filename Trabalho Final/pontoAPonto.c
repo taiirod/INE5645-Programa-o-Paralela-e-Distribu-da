@@ -1,23 +1,33 @@
 // mpicc pontoAPonto.c -o pontoAPonto
-// Metade 13 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End
 // Original 25 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//      mpiexec -np 3 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 // Dobro 50 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//      mpiexec -np 3 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include <sys/time.h>
 #include <ctype.h>
 
-struct timeval t1, t2;
 int palavrasPorProcesso;
 int numeroRecebido;
 int numeroLimite;
 int ocorrencias_palavra_chave[0];
 int processo[10];
+
+double calculaExecTotal(double *array, int num_elements)
+{
+    double sum = 0;
+    int i;
+    for (i = 0; i < num_elements; i++)
+    {
+        sum += array[i];
+    }
+    return sum / num_elements;
+}
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
@@ -53,6 +63,8 @@ int numOcorrencias(char *linha, char *palavra, int contador)
 
 int main(int argc, char *argv[])
 {
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
     int i;
     MPI_Init(NULL, NULL);
     int world_size;
@@ -109,6 +121,29 @@ int main(int argc, char *argv[])
         {
             printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
         }
+        gettimeofday(&t2, NULL);
+
+        double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
+
+        double *totais = NULL;
+        if (world_rank == 0)
+        {
+            totais = (double *)malloc(sizeof(double) * world_size);
+            assert(totais != NULL);
+        }
+
+        MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+        if (world_rank == 0)
+        {
+            double execTotal = calculaExecTotal(totais, world_size);
+
+            printf("\n");
+            printf("----------------------------------------------------------\n");
+            printf("[PROCESSO: %d] Tempo total de execução [PONTO A PONTO] = %f\n", world_rank, execTotal);
+            printf("----------------------------------------------------------\n");
+        }
+
         fclose(fp);
     }
 
