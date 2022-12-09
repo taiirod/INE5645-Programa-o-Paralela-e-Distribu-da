@@ -134,6 +134,18 @@ int main(int argc, char *argv[])
         printf("Done\n");
     }
 
+    while (buf)
+    {
+        for (int i = 0; i < argc + 1; i++)
+        {
+            numOcorrencias(line, argv[i], i);
+        }
+    }
+    for (int i = 0; i < argc + 1; i++)
+    {
+        printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
+    }
+
     MPI_Finalize();
     return 0;
 }
