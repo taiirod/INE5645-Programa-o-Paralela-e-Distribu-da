@@ -12,6 +12,8 @@
 #include <sys/time.h>
 #include <ctype.h>
 
+#define FILENAME "arquivo.txt"
+
 int palavrasPorProcesso;
 int numeroRecebido;
 int numeroLimite;
@@ -26,7 +28,7 @@ double calculaExecTotal(double *array, int num_elements)
     {
         sum += array[i];
     }
-    return sum / (num_elements-1);
+    return sum / (num_elements - 1);
 }
 
 int numOcorrencias(char *linha, char *palavra, int contador)
@@ -64,18 +66,30 @@ int numOcorrencias(char *linha, char *palavra, int contador)
 int main(int argc, char *argv[])
 {
     struct timeval t1, t2;
-    gettimeofday(&t1, NULL);
+
     int i;
+    int world_size, world_rank;
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    int bufsize, nrchar;
+    char *buf; /* Buffer for reading */
+    MPI_Offset filesize;
+    MPI_File myfile;   /* Shared file */
+    MPI_Status status; /* Status returned from read */
+
+    gettimeofday(&t1, NULL);
     MPI_Init(NULL, NULL);
-    int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
     if (world_size < 2)
     {
         fprintf(stderr, "Must at least two processes for this example\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     if (argc < 2)
     {
@@ -88,75 +102,36 @@ int main(int argc, char *argv[])
         Define o numero de inicio e final de execução de cada processo
         Ex: Se tem 6 palavras e 3 processos, apenas o 1 e o 2 executarão a busca.
         Sendo assim, teremos 3 palavras em cada processo.
-        Então:  
+        Então:
             Proc1 recebe numeroParaMandar = 1 e numeroLimite = 3
             Proc2 recebe numeroParaMandar = 4 e numeroLimite = 6
         Assim então, cada processo sabe a sua posição inicial e final de iteração para busca de palavras.
     */
-    if (world_rank == 0)
-    {
-        palavrasPorProcesso = (argc - 1) / (world_size - 1);
-        int numeroParaMandar = 1;
-        for (int i = 1; i < world_size; i++)
-        {
-            MPI_Send(&numeroParaMandar, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-            numeroParaMandar = numeroParaMandar + palavrasPorProcesso;
-            numeroLimite = numeroParaMandar - 1;
-            // nesse caso, foi utilizada tag 1 para garantir que mensagem seria recebida corretamente
-            MPI_Send(&numeroLimite, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
-        }
-    }
-    else
-    {
-        FILE *fp;
-        char *line = NULL;
-        size_t len = 0;
-        ssize_t read;
-        fp = fopen("arquivo.txt", "r");
-        if (fp == NULL)
-        {
-            printf("Não conseguiu abrir o arquivo %s\n", fp);
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
-        MPI_Recv(&numeroRecebido, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&numeroLimite, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        while ((read = getline(&line, &len, fp)) != -1)
-        {
-            for (int i = numeroRecebido; i < numeroLimite + 1; i++)
-            {
-                numOcorrencias(line, argv[i], i);
-            }
-        }
-        for (int i = numeroRecebido; i < numeroLimite + 1; i++)
-        {
-            printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
-        }
-        gettimeofday(&t2, NULL);
-
-        fclose(fp);
-    }
-    double t_total;
-
-    if (world_rank != 0)
-    {
-        t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
-    }
-
-    double *totais = NULL;
-    totais = (double *)malloc(sizeof(double) * world_size);
-    assert(totais != NULL);
-
-    MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    /* Open the file */
+    MPI_File_open(MPI_COMM_WORLD, FILENAME, MPI_MODE_RDONLY, MPI_INFO_NULL, &myfile);
+    /* Get the size of the file */
+    MPI_File_get_size(myfile, &filesize);
+    /* Calculate how many elements that is */
+    filesize = filesize / sizeof(char);
+    /* Calculate how many elements each processor gets */
+    bufsize = filesize / world_size;
+    /* Allocate the buffer to read to, one extra for terminating null char */
+    buf = (char *)malloc((bufsize + 1) * sizeof(char));
+    /* Set the file view */
+    MPI_File_set_view(myfile, world_rank * bufsize * sizeof(char), MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL);
+    /* Read from the file */
+    MPI_File_read(myfile, buf, bufsize, MPI_CHAR, &status);
+    /* Find out how many elemyidnts were read */
+    MPI_Get_count(&status, MPI_CHAR, &nrchar);
+    /* Set terminating null char in the string */
+    buf[nrchar] = (char)0;
+    printf("Process %2d read %d characters: \n", world_rank, nrchar);
+    // printf("  %s\n", buf);
 
     if (world_rank == 0)
     {
-        double execTotal = calculaExecTotal(totais, world_size);
-
-        printf("\n");
-        printf("----------------------------------------------------------\n");
-        printf("[PROCESSO: %d] Tempo total de execução [PONTO A PONTO] = %f\n", world_rank, execTotal);
-        printf("----------------------------------------------------------\n");
+        printf("Done\n");
     }
 
     MPI_Finalize();
