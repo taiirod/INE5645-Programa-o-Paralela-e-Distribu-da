@@ -1,8 +1,8 @@
-// mpicc pontoAPonto.c -o pontoAPonto
+// mpicc iompi.c -o iompi
 // Original 25 palavras
-//      mpiexec -np 3 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//      mpiexec -np 3 ./iompi All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 // Dobro 50 palavras
-//      mpiexec -np 3 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//      mpiexec -np 3 ./iompi All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 
 #include <assert.h>
 #include <stdio.h>
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     /* Set terminating null char in the string */
     buf[nrchar] = (char)0;
     printf("Process %2d read %d characters: \n", world_rank, nrchar);
-    // printf("  %s\n", buf);
+    printf("Process %2d read  %s\n", world_rank, buf);
 
     if (world_rank == 0)
     {

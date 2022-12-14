@@ -1,8 +1,10 @@
 // mpicc coletiva.c -o coletiva
-// Original 25 palavras
-//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
-// Dobro 50 palavras
-//      mpiexec -np 3 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//  25 palavras
+//      mpiexec -np 1 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//  50 palavras
+//      mpiexec -np 1 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes 
+//  100 palavras
+//      mpiexec -np 1 ./coletiva All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes us most day give these any because want new even way well first work our how two use after back also think over its come only look now then than other see them could some good your year into people take know him just no time like can make when
 
 #include <assert.h>
 #include <stdio.h>
@@ -69,11 +71,6 @@ int main(int argc, char *argv[])
     MPI_Init(NULL, NULL);
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    if (world_size < 2)
-    {
-        fprintf(stderr, "Must at least two processes for this example\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
@@ -116,9 +113,10 @@ int main(int argc, char *argv[])
 
     for (int i = numerosRecebidos[0]; i <= numeroLimite; i++)
     {
-        printf("[PROCESSO: %d] Palavra: %s, foi encontrada: %d vezes na posicao %d\n", world_rank, argv[i], ocorrencias_palavra_chave[i], i);
+        printf("[PROCESSO: %d] Palavra: %s, foi encontrada: %d vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
     }
     gettimeofday(&t2, NULL);
+    fclose(fp);
 
     double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
 
@@ -141,7 +139,7 @@ int main(int argc, char *argv[])
         printf("----------------------------------------------------------\n");
     }
 
-    fclose(fp);
+    
 
     MPI_Finalize();
     return 0;
