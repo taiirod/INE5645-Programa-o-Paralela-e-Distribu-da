@@ -46,7 +46,6 @@ int numOcorrencias(char *linha, char *palavra, int contador)
     int cont = 0;
     int i;
     int j = 0;
-    printf("linha na posição i: %s\n", linha);
     for (i = 0; i < strlen(linha); i++)
     {
         if (linha[i] == palavra[j])
@@ -138,22 +137,17 @@ int main(int argc, char *argv[])
     /* Set terminating null char in the string */
     buf[nrchar] = (char)0;
 
-    char filename[12];
-    snprintf(filename, 12, "buffer_%d.txt", world_rank);
+    char filename[100];
+    snprintf(filename, 100, "buffer_%d.txt", world_rank);
 
     fp = fopen(filename, "w+");
     fputs(buf, fp);
-
-    if (fp != NULL)
-    {
-        printf("escrevi no buffer \n");
-    }
+    fp = fopen(filename, "r");
 
     while ((read = getline(&line, &len, fp)) != -1)
     {
         for (int i = 1; i < argc; i++)
         {
-            printf("Procurando palavras... \n");
             numOcorrencias(line, argv[i], i);
         }
     }
