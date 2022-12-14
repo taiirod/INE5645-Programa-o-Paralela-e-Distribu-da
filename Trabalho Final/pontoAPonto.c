@@ -45,10 +45,12 @@ int numOcorrencias(char *linha, char *palavra, int contador)
     int cont = 0;
     int i;
     int j = 0;
+    printf("linha na posição i: %s\n", linha);
     for (i = 0; i < strlen(linha); i++)
     {
         if (linha[i] == palavra[j])
         {
+            
             j++;
         }
         else
