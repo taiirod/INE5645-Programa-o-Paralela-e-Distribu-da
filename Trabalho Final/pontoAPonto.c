@@ -28,7 +28,7 @@ double calculaExecTotal(double *array, int num_elements)
     {
         sum += array[i];
     }
-    return sum / (num_elements-1);
+    return sum / (num_elements - 1);
 }
 
 int numOcorrencias(char *linha, char *palavra, int contador)
@@ -50,7 +50,7 @@ int numOcorrencias(char *linha, char *palavra, int contador)
     {
         if (linha[i] == palavra[j])
         {
-            
+
             j++;
         }
         else
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         Define o numero de inicio e final de execução de cada processo
         Ex: Se tem 6 palavras e 3 processos, apenas o 1 e o 2 executarão a busca.
         Sendo assim, teremos 3 palavras em cada processo.
-        Então:  
+        Então:
             Proc1 recebe numeroParaMandar = 1 e numeroLimite = 3
             Proc2 recebe numeroParaMandar = 4 e numeroLimite = 6
         Assim então, cada processo sabe a sua posição inicial e final de iteração para busca de palavras.
@@ -136,32 +136,18 @@ int main(int argc, char *argv[])
         {
             printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
         }
+        
+        MPI_Barrier(MPI_COMM_WORLD);
         gettimeofday(&t2, NULL);
 
         fclose(fp);
     }
-    double t_total;
+    double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
 
-    if (world_rank != 0)
-    {
-        t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
-    }
-
-    double *totais = NULL;
-    totais = (double *)malloc(sizeof(double) * world_size);
-    assert(totais != NULL);
-
-    MPI_Gather(&t_total, 1, MPI_DOUBLE, totais, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    if (world_rank == 0)
-    {
-        double execTotal = calculaExecTotal(totais, world_size);
-
-        printf("\n");
-        printf("----------------------------------------------------------\n");
-        printf("[PROCESSO: %d] Tempo total de execução [PONTO A PONTO] = %f\n", world_rank, execTotal);
-        printf("----------------------------------------------------------\n");
-    }
+    printf("\n");
+    printf("----------------------------------------------------------\n");
+    printf("Tempo total de execução [PONTO A PONTO] = %f\n", world_rank);
+    printf("----------------------------------------------------------\n");
 
     MPI_Finalize();
     return 0;
