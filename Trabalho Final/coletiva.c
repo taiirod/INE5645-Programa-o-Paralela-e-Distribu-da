@@ -17,8 +17,6 @@
 
 #define FILENAME "arquivo.txt"
 
-int palavrasPorProcesso;
-char bufRecebido;
 int ocorrencias_palavra_chave[0];
 int ocorrenciasSomadas[0];
 
@@ -61,7 +59,6 @@ int main(int argc, char *argv[])
 
     int numeroDePalavras = argc;
 
-    int i;
     int world_size, world_rank;
 
     FILE *fp;
@@ -70,10 +67,10 @@ int main(int argc, char *argv[])
     ssize_t read;
 
     int bufsize, nrchar;
-    char *buf; /* Buffer for reading */
+    char *buf;
     MPI_Offset filesize;
-    MPI_File myfile;   /* Shared file */
-    MPI_Status status; /* Status returned from read */
+    MPI_File myfile;
+    MPI_Status status;
 
     MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -112,6 +109,7 @@ int main(int argc, char *argv[])
     // printf("Define ultimo char da string como nulo...\n");
     buf[nrchar] = (char)0;
 
+    // Escreve o buf em arquivos .txt
     char filename[100];
     snprintf(filename, 100, "buffer_%d.txt", world_rank);
 

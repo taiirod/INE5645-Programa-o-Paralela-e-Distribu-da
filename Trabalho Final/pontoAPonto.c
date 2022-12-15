@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
     // printf("Define ultimo char da string como nulo...\n");
     buf[nrchar] = (char)0;
 
-    int ocorrenciasSomadas[numeroDePalavras];
+    int ocorrencias[numeroDePalavras];
+    int ocorrenciasTotais[numeroDePalavras];
 
     char filename[100];
     snprintf(filename, 100, "buffer_%d.txt", world_rank);
@@ -122,47 +123,31 @@ int main(int argc, char *argv[])
     {
         for (int i = 1; i < argc; i++)
         {
-            // printf("Contando ocorrencias...\n");
             numOcorrencias(line, argv[i], i);
         }
     }
 
-    int ocorrenciasTotais[numeroDePalavras];
-
-    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[1], ocorrencias_palavra_chave[1]);
-    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[2], ocorrencias_palavra_chave[2]);
-    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[3], ocorrencias_palavra_chave[3]);
-
     for (int i = 0; i < world_size; i++)
     {
-
         for (int j = 1; j < numeroDePalavras; j++)
         {
+            MPI_Send(&ocorrencias_palavra_chave, numeroDePalavras, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
-            MPI_Send(&ocorrencias_palavra_chave, numeroDePalavras, MPI_INT, world_rank, 0, MPI_COMM_WORLD);
-        }
-
-        if (world_rank == 0)
-        {
-
-            for (int k = 1; k < numeroDePalavras; k++)
+            if (world_rank == 0)
             {
-                printf("rank: %i - To iterando no ultimo for \n", world_rank);
+                ocorrenciasTotais[j] = 0;
+                MPI_Recv(&ocorrencias, numeroDePalavras, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                ocorrenciasTotais[j] += ocorrencias[j];
 
-                /*
-                MPI_Recv(&ocorrenciasSomadas, numeroDePalavras, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                ocorrenciasTotais[k] = ocorrenciasSomadas[k];
-
-                printf("Palavra: %s, foi encontrada: %i vezes\n", argv[k], ocorrenciasTotais[k]);
-                */
+                printf("Palavra: %s, foi encontrada: %i vezes\n", argv[j], ocorrenciasTotais[j]);
             }
+
         }
+        printf("--------------------------------------------------------\n");
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-
     gettimeofday(&t2, NULL);
-
     fclose(fp);
 
     if (world_rank == 0)
@@ -171,7 +156,7 @@ int main(int argc, char *argv[])
 
         printf("\n");
         printf("----------------------------------------------------------\n");
-        printf("Tempo total de execução [COLETIVA] = %f\n", t_total);
+        printf("Tempo total de execução [PONTO A PONTO] = %f\n", t_total);
         printf("----------------------------------------------------------\n");
     }
 
