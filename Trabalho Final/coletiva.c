@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
     MPI_File myfile;   /* Shared file */
     MPI_Status status; /* Status returned from read */
 
-    gettimeofday(&t1, NULL);
     MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
@@ -86,33 +85,31 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* World_rank (Processo 0) responsavel por configurar execução
-        Calcula quantas palavras cada processo iria procurar
-        Define o numero de inicio e final de execução de cada processo
-        Ex: Se tem 6 palavras e 3 processos, apenas o 1 e o 2 executarão a busca.
-        Sendo assim, teremos 3 palavras em cada processo.
-        Então:
-            Proc1 recebe numeroParaMandar = 1 e numeroLimite = 3
-            Proc2 recebe numeroParaMandar = 4 e numeroLimite = 6
-        Assim então, cada processo sabe a sua posição inicial e final de iteração para busca de palavras.
-    */
-    /* Open the file */
+    // printf("Abrindo arquivo...\n");
     MPI_File_open(MPI_COMM_WORLD, FILENAME, MPI_MODE_RDONLY, MPI_INFO_NULL, &myfile);
-    /* Get the size of the file */
+
+    // printf("Calculando tamanho do arquivo...\n");
     MPI_File_get_size(myfile, &filesize);
-    /* Calculate how many elements that is */
+
+    // printf("Calculando numero de elementos do arquivo...\n");
     filesize = filesize / sizeof(char);
-    /* Calculate how many elements each processor gets */
+
+    // printf("Calculando quantos elementos cada processo recebe...\n");
     bufsize = filesize / world_size;
-    /* Allocate the buffer to read to, one extra for terminating null char */
+
+    // printf("Alocando memoria para buffer...\n");
     buf = (char *)malloc((bufsize + 1) * sizeof(char));
-    /* Set the file view */
+
+    // printf("Configurando file view...\n");
     MPI_File_set_view(myfile, world_rank * bufsize * sizeof(char), MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL);
-    /* Read from the file */
+
+    // printf("Lendo arquivo...\n");
     MPI_File_read(myfile, buf, bufsize, MPI_CHAR, &status);
-    /* Find out how many elemyidnts were read */
+
+    // printf("Conta quantos elementos ja foram lidos...\n");
     MPI_Get_count(&status, MPI_CHAR, &nrchar);
-    /* Set terminating null char in the string */
+
+    // printf("Define ultimo char da string como nulo...\n");
     buf[nrchar] = (char)0;
 
     char filename[100];
@@ -142,7 +139,7 @@ int main(int argc, char *argv[])
             printf("Palavra: %s, foi encontrada: %d vezes\n", argv[i], ocorrenciasSomadas[i]);
         }
     }
-    
+
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&t2, NULL);
 
@@ -155,7 +152,7 @@ int main(int argc, char *argv[])
         printf("Tempo total de execução [COLETIVA] = %f\n", t_total);
         printf("----------------------------------------------------------\n");
     }
-    
+
     MPI_Finalize();
     return 0;
 }

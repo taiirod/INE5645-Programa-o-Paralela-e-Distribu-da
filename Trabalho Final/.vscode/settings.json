@@ -2,6 +2,11 @@
     "files.associations": {
         "__locale": "c",
         "assert.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "stdlib.h": "c",
+        "__bit_reference": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "unordered_map": "c"
     }
 }

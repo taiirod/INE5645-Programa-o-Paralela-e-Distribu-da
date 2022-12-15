@@ -14,22 +14,9 @@
 #include <sys/time.h>
 #include <ctype.h>
 
-int palavrasPorProcesso;
-int numeroRecebido;
-int numeroLimite;
-int ocorrencias_palavra_chave[0];
-int processo[10];
+#define FILENAME "arquivo.txt"
 
-double calculaExecTotal(double *array, int num_elements)
-{
-    double sum = 0;
-    int i;
-    for (i = 0; i < num_elements; i++)
-    {
-        sum += array[i];
-    }
-    return sum / (num_elements - 1);
-}
+int ocorrencias_palavra_chave[0];
 
 int numOcorrencias(char *linha, char *palavra, int contador)
 {
@@ -45,7 +32,6 @@ int numOcorrencias(char *linha, char *palavra, int contador)
     int cont = 0;
     int i;
     int j = 0;
-    printf("linha na posição i: %s\n", linha);
     for (i = 0; i < strlen(linha); i++)
     {
         if (linha[i] == palavra[j])
@@ -69,16 +55,25 @@ int main(int argc, char *argv[])
 {
     struct timeval t1, t2;
     gettimeofday(&t1, NULL);
-    int i;
+
+    int numeroDePalavras = argc;
+
+    int posicao;
+    int world_size, world_rank;
+
+    FILE *fp;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    int bufsize, nrchar;
+    char *buf; /* Buffer for reading */
+    MPI_Offset filesize;
+    MPI_File myfile;   /* Shared file */
+    MPI_Status status; /* Status returned from read */
+
     MPI_Init(NULL, NULL);
-    int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    if (world_size < 2)
-    {
-        fprintf(stderr, "Must at least two processes for this example\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     if (argc < 2)
@@ -87,67 +82,98 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* World_rank (Processo 0) responsavel por configurar execução
-        Calcula quantas palavras cada processo iria procurar
-        Define o numero de inicio e final de execução de cada processo
-        Ex: Se tem 6 palavras e 3 processos, apenas o 1 e o 2 executarão a busca.
-        Sendo assim, teremos 3 palavras em cada processo.
-        Então:
-            Proc1 recebe numeroParaMandar = 1 e numeroLimite = 3
-            Proc2 recebe numeroParaMandar = 4 e numeroLimite = 6
-        Assim então, cada processo sabe a sua posição inicial e final de iteração para busca de palavras.
-    */
-    if (world_rank == 0)
+    // printf("Abrindo arquivo...\n");
+    MPI_File_open(MPI_COMM_WORLD, FILENAME, MPI_MODE_RDONLY, MPI_INFO_NULL, &myfile);
+
+    // printf("Calculando tamanho do arquivo...\n");
+    MPI_File_get_size(myfile, &filesize);
+
+    // printf("Calculando numero de elementos do arquivo...\n");
+    filesize = filesize / sizeof(char);
+
+    // printf("Calculando quantos elementos cada processo recebe...\n");
+    bufsize = filesize / world_size;
+
+    // printf("Alocando memoria para buffer...\n");
+    buf = (char *)malloc((bufsize + 1) * sizeof(char));
+
+    // printf("Configurando file view...\n");
+    MPI_File_set_view(myfile, world_rank * bufsize * sizeof(char), MPI_CHAR, MPI_CHAR, "native", MPI_INFO_NULL);
+
+    // printf("Lendo arquivo...\n");
+    MPI_File_read(myfile, buf, bufsize, MPI_CHAR, &status);
+
+    // printf("Conta quantos elementos ja foram lidos...\n");
+    MPI_Get_count(&status, MPI_CHAR, &nrchar);
+
+    // printf("Define ultimo char da string como nulo...\n");
+    buf[nrchar] = (char)0;
+
+    int ocorrenciasSomadas[numeroDePalavras];
+
+    char filename[100];
+    snprintf(filename, 100, "buffer_%d.txt", world_rank);
+
+    fp = fopen(filename, "w+");
+    fputs(buf, fp);
+    fp = fopen(filename, "r");
+
+    while ((read = getline(&line, &len, fp)) != -1)
     {
-        palavrasPorProcesso = (argc - 1) / (world_size - 1);
-        int numeroParaMandar = 1;
-        for (int i = 1; i < world_size; i++)
+        for (int i = 1; i < argc; i++)
         {
-            MPI_Send(&numeroParaMandar, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
-            numeroParaMandar = numeroParaMandar + palavrasPorProcesso;
-            numeroLimite = numeroParaMandar - 1;
-            // nesse caso, foi utilizada tag 1 para garantir que mensagem seria recebida corretamente
-            MPI_Send(&numeroLimite, 1, MPI_INT, i, 1, MPI_COMM_WORLD);
+            // printf("Contando ocorrencias...\n");
+            numOcorrencias(line, argv[i], i);
         }
     }
-    else
-    {
-        FILE *fp;
-        char *line = NULL;
-        size_t len = 0;
-        ssize_t read;
-        fp = fopen("arquivo.txt", "r");
-        if (fp == NULL)
-        {
-            printf("Não conseguiu abrir o arquivo %s\n", fp);
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
-        MPI_Recv(&numeroRecebido, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&numeroLimite, 1, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        while ((read = getline(&line, &len, fp)) != -1)
+    int ocorrenciasTotais[numeroDePalavras];
+
+    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[1], ocorrencias_palavra_chave[1]);
+    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[2], ocorrencias_palavra_chave[2]);
+    printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[3], ocorrencias_palavra_chave[3]);
+
+    for (int i = 0; i < world_size; i++)
+    {
+
+        for (int j = 1; j < numeroDePalavras; j++)
         {
-            for (int i = numeroRecebido; i < numeroLimite + 1; i++)
+
+            MPI_Send(&ocorrencias_palavra_chave, numeroDePalavras, MPI_INT, world_rank, 0, MPI_COMM_WORLD);
+        }
+
+        if (world_rank == 0)
+        {
+
+            for (int k = 1; k < numeroDePalavras; k++)
             {
-                numOcorrencias(line, argv[i], i);
+                printf("rank: %i - To iterando no ultimo for \n", world_rank);
+
+                /*
+                MPI_Recv(&ocorrenciasSomadas, numeroDePalavras, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                ocorrenciasTotais[k] = ocorrenciasSomadas[k];
+
+                printf("Palavra: %s, foi encontrada: %i vezes\n", argv[k], ocorrenciasTotais[k]);
+                */
             }
         }
-        for (int i = numeroRecebido; i < numeroLimite + 1; i++)
-        {
-            printf("[PROCESSO: %i] Palavra: %s, foi encontrada: %i vezes\n", world_rank, argv[i], ocorrencias_palavra_chave[i]);
-        }
-        
-        MPI_Barrier(MPI_COMM_WORLD);
-        gettimeofday(&t2, NULL);
-
-        fclose(fp);
     }
-    double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
 
-    printf("\n");
-    printf("----------------------------------------------------------\n");
-    printf("Tempo total de execução [PONTO A PONTO] = %f\n", world_rank);
-    printf("----------------------------------------------------------\n");
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    gettimeofday(&t2, NULL);
+
+    fclose(fp);
+
+    if (world_rank == 0)
+    {
+        double t_total = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1000000.0);
+
+        printf("\n");
+        printf("----------------------------------------------------------\n");
+        printf("Tempo total de execução [COLETIVA] = %f\n", t_total);
+        printf("----------------------------------------------------------\n");
+    }
 
     MPI_Finalize();
     return 0;
