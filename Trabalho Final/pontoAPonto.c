@@ -1,10 +1,10 @@
 // mpicc pontoAPonto.c -o pontoAPonto
 //  25 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
+//      mpiexec -np 1 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh
 //  50 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
+//      mpiexec -np 1 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes
 //  100 palavras
-//      mpiexec -np 2 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes us most day give these any because want new even way well first work our how two use after back also think over its come only look now then than other see them could some good your year into people take know him just no time like can make when
+//      mpiexec -np 1 ./pontoAPonto All And Boy Book Call Car Chair Children City Dog Door Enemy End Enough Eat Friend Father Go Good Girl Food Hear House Inside Laugh Listen Man Name Never Next New Noise Often Pair Pick Play Room See Sell Sit Speak Smile Sister Think Then Walk Water Work Write Woman Yes us most day give these any because want new even way well first work our how two use after back also think over its come only look now then than other see them could some good your year into people take know him just no time like can make when
 
 #include <assert.h>
 #include <stdio.h>
@@ -143,7 +143,6 @@ int main(int argc, char *argv[])
             }
 
         }
-        printf("--------------------------------------------------------\n");
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
